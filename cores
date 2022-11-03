@@ -1,0 +1,39 @@
+; You may customize this and other start-up templates; 
+; The location of this template is c:\emu8086\inc\0_com_template.txt
+ INCLUDE "emu8086.inc"
+org 100h
+
+; EX:
+; 
+   
+   CHAR_COLOR   MACRO   LINHA,COLUNA,CAR,COLOR
+	PUSHF
+        PUSH    AX
+	PUSH 	BX
+	PUSH 	CX
+	PUSH 	DX
+	
+	MOV BP, OFFSET MY_CHAR
+	MOV DS:[BP],CAR
+	mov     bh, 0    ; page.
+	mov     bl, COLOR
+	mov     dl, COLUNA    ; col.
+	mov     dh, LINHA     ; row.
+	mov     ah, 13h  ; function.
+	int     10h	
+
+	POP 	DX
+	POP	CX
+	POP 	BX
+	POP 	AX
+	POPF
+ENDM
+MY_CHAR DB 0,1
+;EXEMPLO NO EMU8086
+MOV AL,'C'
+CHAR_COLOR 1,1,AL,111
+
+
+ MOV AL,'A'
+ CHAR_COLOR 10,10,'A',02H  
+ret
