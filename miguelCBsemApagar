@@ -1,4 +1,4 @@
-                     org 100h
+  org 100h
 
 INCLUDE "emu8086.inc"
 
@@ -385,8 +385,8 @@ PROCURANDO_CIMA_BAIXO_IGUAIS:
     MOV DL, [SI]
     MOV DH, [DI]
     
-    CMP DL, 0
-    JE  ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO 
+   ; CMP DL, 0
+   ; JE  ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO 
     
     CMP DH, 0                                        
     JE  NAO_ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO
@@ -401,9 +401,9 @@ IMPRIMIR_TRACO_CB:
     INC CONTADOR 
     MOV DL, 0
     MOV AH,2 
-    MOV DL, [BX]
+    MOV DL, '-'
     INT 21H
-    
+    MOV DL, [BX]
     CMP DL, '*'
     JE PULA_COLUNA_CB 
     CALL PROXIMA_LINHA_CB
@@ -436,59 +436,7 @@ IGUAL_PARCIAL_PROCURANDO_CIMA_BAIXO_IGUAIS:
              
     JMP PROCURANDO_CIMA_BAIXO_IGUAIS   
     
-;RETORNA_TRACO_BACKSPACE_PUSH_CB:
-;    MOV PUSH_CONTADOR_2_BP, CONTADOR_2_BP
-;    JMP RETORNA_TRACO_BACKSPACE_CB
-;    
-;RETORNA_TRACO_BACKSPACE_CB:
-;    CMP DL, 0
-;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
-;    CMP BP, 0
-;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
-;    
-; ;   PUSH BH
-;  ;  PUSH DL
-;    MOV AH, 3
-;    MOV BH, 0
-;    INT 10H
-;    SUB DL, CONTADOR_2_BP
-;    MOV LINHA, DL
-;    MOV AH, 2
-;    MOV DL, LINHA
-;    MOV DH, DH
-;    MOV BH, 0
-;    INT 10H
-;   ; POP BH
-;;    POP DL
-;  ;  MOV AH, 2
-;  ;  MOV DL, 08
-;  ;  INT 21H  
-;  ;  DEC BP    
-;  ;  CMP BP, 0
-;    JMP RETORNA_TRACO_POP_CB
-;  ;  JMP RETORNA_TRACO_BACKSPACE_ED 
-;    
-;RETORNA_TRACO_POP_CB:
-;    POP BP
-;    JMP RETORNA_TRACO_CB
-;    
-;RETORNA_TRACO_CB: 
-;    CMP DL, 0
-;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
-;    CMP BP, 0
-;    JE PROCURANDO_CIMA_BAIXO_IGUAIS
-;    
-;    MOV AH, 2
-;    MOV DL, '-' 
-;    INT 21H
-;    DEC BP
-;    
-;    DEC SI 
-;    CALL PULA_LINHA
-;    CMP BP, 0
-;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
-;    
-;    JMP RETORNA_TRACO_CB
+
     
 ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO: 
     CALL RESTO_IMPRECAO_CB
@@ -513,9 +461,9 @@ RESTO_IMPRECAO_CB:
     MOV AH,2
     MOV DL,[BX]
     INT 21H
-    
+    MOV DL, [BX]
     CMP DL, '*'
-    JE PULA_COLUNA_FIM_CB ;CHECK
+    JE PULA_COLUNA_FIM_CB
     CALL PROXIMA_LINHA_CB
     ADD BX, 42
     MOV DL,[BX]
@@ -539,21 +487,15 @@ PULA_COLUNA_CB:
     INC BX
     PUSH BX 
     MOV DI, BX
-   ; POP DI
-;    INC DI
-;    PUSH DI
+  
     CALL CURSOR_PROXIMA_COLUNA_CB
     JMP PROCURANDO_CIMA_BAIXO_IGUAIS 
     RET
     
- PULA_COLUNA_FIM_CB:    ; TODO
+ PULA_COLUNA_FIM_CB:    
     POP BX
     INC BX
     PUSH BX
-   ; MOV DI, BX
-    ;POP DI
-;    INC DI
-;    PUSH DI
     CALL CURSOR_PROXIMA_COLUNA_CB
     JMP RESTO_IMPRECAO_CB
     RET
@@ -564,10 +506,7 @@ CURSOR_PROXIMA_COLUNA_CB:
     MOV AH, 03 ; AH=3/INT10H = GET CURSOR POSITION
     MOV BH, 0
     INT 10H
-    INC DL
-   ; MOV COLUNA, DL
-    SUB DH, CONTADOR
-    ;MOV LINHA, DH
+    SUB DH, CONTADOR 
     INC DH
     MOV AH, 2  ; AH=2/INT10H SET CURSOR POSITION
     MOV BH, 0
@@ -653,4 +592,63 @@ TRACO    DB   "!----------------------------------------@"
          DB   "!----------------------------------------@"
          DB   "*****************************************#",0  
 NAO_ACHADO DB "NAO ACHADO",0
-RET
+RET 
+
+
+
+
+
+
+ ;RETORNA_TRACO_BACKSPACE_PUSH_CB:
+;    MOV PUSH_CONTADOR_2_BP, CONTADOR_2_BP
+;    JMP RETORNA_TRACO_BACKSPACE_CB
+;    
+;RETORNA_TRACO_BACKSPACE_CB:
+;    CMP DL, 0
+;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
+;    CMP BP, 0
+;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
+;    
+; ;   PUSH BH
+;  ;  PUSH DL
+;    MOV AH, 3
+;    MOV BH, 0
+;    INT 10H
+;    SUB DL, CONTADOR_2_BP
+;    MOV LINHA, DL
+;    MOV AH, 2
+;    MOV DL, LINHA
+;    MOV DH, DH
+;    MOV BH, 0
+;    INT 10H
+;   ; POP BH
+;;    POP DL
+;  ;  MOV AH, 2
+;  ;  MOV DL, 08
+;  ;  INT 21H  
+;  ;  DEC BP    
+;  ;  CMP BP, 0
+;    JMP RETORNA_TRACO_POP_CB
+;  ;  JMP RETORNA_TRACO_BACKSPACE_ED 
+;    
+;RETORNA_TRACO_POP_CB:
+;    POP BP
+;    JMP RETORNA_TRACO_CB
+;    
+;RETORNA_TRACO_CB: 
+;    CMP DL, 0
+;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
+;    CMP BP, 0
+;    JE PROCURANDO_CIMA_BAIXO_IGUAIS
+;    
+;    MOV AH, 2
+;    MOV DL, '-' 
+;    INT 21H
+;    DEC BP
+;    
+;    DEC SI 
+;    CALL PULA_LINHA
+;    CMP BP, 0
+;    JE PROCURANDO_CIMA_BAIXO_IGUAIS 
+;    
+;    JMP RETORNA_TRACO_CB
