@@ -1,4 +1,4 @@
-                                    org 100h
+                     org 100h
 
 INCLUDE "emu8086.inc"
 
@@ -403,6 +403,7 @@ IMPRIMIR_TRACO_CB:
     MOV AH,2 
     MOV DL, [BX]
     INT 21H
+    
     CMP DL, '*'
     JE PULA_COLUNA_CB 
     CALL PROXIMA_LINHA_CB
@@ -490,7 +491,7 @@ IGUAL_PARCIAL_PROCURANDO_CIMA_BAIXO_IGUAIS:
 ;    JMP RETORNA_TRACO_CB
     
 ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO: 
-    CALL IMPRECAO_CB
+    CALL RESTO_IMPRECAO_CB
       
 IMPRECAO_CB:
     
@@ -508,18 +509,19 @@ RET
   
     
 RESTO_IMPRECAO_CB:
+    INC CONTADOR
     MOV AH,2
     MOV DL,[BX]
     INT 21H
-    CALL PROXIMA_LINHA_CB
+    
     CMP DL, '*'
     JE PULA_COLUNA_FIM_CB ;CHECK
+    CALL PROXIMA_LINHA_CB
     ADD BX, 42
     MOV DL,[BX]
     CMP DL, '#' 
-    
     JE FIM_PROCURA_CIMA_BAIXO 
-    JMP RESTO_IMPRECAO_ED
+    JMP RESTO_IMPRECAO_CB
            
     
 NAO_ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO:   
@@ -535,10 +537,11 @@ FIM_PROCURA_CIMA_BAIXO:
 PULA_COLUNA_CB:
     POP BX
     INC BX
-    PUSH BX
-    POP DI
-    INC DI
-    PUSH DI
+    PUSH BX 
+    MOV DI, BX
+   ; POP DI
+;    INC DI
+;    PUSH DI
     CALL CURSOR_PROXIMA_COLUNA_CB
     JMP PROCURANDO_CIMA_BAIXO_IGUAIS 
     RET
@@ -547,9 +550,10 @@ PULA_COLUNA_CB:
     POP BX
     INC BX
     PUSH BX
-    POP DI
-    INC DI
-    PUSH DI
+   ; MOV DI, BX
+    ;POP DI
+;    INC DI
+;    PUSH DI
     CALL CURSOR_PROXIMA_COLUNA_CB
     JMP RESTO_IMPRECAO_CB
     RET
@@ -571,8 +575,8 @@ CURSOR_PROXIMA_COLUNA_CB:
     MOV DH, DH
     INT 10H
     
-    POP BX 
-    POP DI
+    POP DI 
+    POP BX
     MOV CONTADOR, 0
     RET        
     
@@ -590,8 +594,8 @@ PROXIMA_LINHA_CB:
     MOV DL, DL
     MOV DH, DH
     INT 10H
-    POP BX
     POP DI
+    POP BX
     ret
 PULA_LINHA:                      
     pushf
