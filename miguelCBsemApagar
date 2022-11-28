@@ -1,4 +1,4 @@
-  org 100h
+ org 100h
 
 INCLUDE "emu8086.inc"
 
@@ -33,7 +33,15 @@ DEFINE_PRINT_STRING
     MOV BX, OFFSET TRACO
     
     CALL PULA_LINHA
-    CALL PROCURA_CIMA_BAIXO  
+   ; CALL PROCURA_CIMA_BAIXO
+    
+    BC:
+    MOV SI, OFFSET PALAVRA
+    MOV DI, OFFSET INICIO_A
+    MOV BX, OFFSET TRACO
+    
+    CALL PULA_LINHA
+    CALL PROCURA_BAIXO_CIMA  
 
 PROCURA_ESQUERDA_DIREITA:
     PUSHF  
@@ -439,7 +447,7 @@ IGUAL_PARCIAL_PROCURANDO_CIMA_BAIXO_IGUAIS:
 
     
 ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO: 
-    CALL RESTO_IMPRECAO_CB
+   ; CALL RESTO_IMPRECAO_CB
       
 IMPRECAO_CB:
     
@@ -451,25 +459,10 @@ IMPRECAO_CB:
     ADD BX, 42 
     INC SI
     CMP DL, 0
-    JE RESTO_IMPRECAO_CB
+   ; JE RESTO_IMPRECAO_CB
     JMP IMPRECAO_CB
 RET
   
-    
-RESTO_IMPRECAO_CB:
-    INC CONTADOR
-    MOV AH,2
-    MOV DL,[BX]
-    INT 21H
-    MOV DL, [BX]
-    CMP DL, '*'
-    JE PULA_COLUNA_FIM_CB
-    CALL PROXIMA_LINHA_CB
-    ADD BX, 42
-    MOV DL,[BX]
-    CMP DL, '#' 
-    JE FIM_PROCURA_CIMA_BAIXO 
-    JMP RESTO_IMPRECAO_CB
            
     
 NAO_ACHOU_SUBSTRING_PROCURA_CIMA_BAIXO:   
@@ -497,7 +490,7 @@ PULA_COLUNA_CB:
     INC BX
     PUSH BX
     CALL CURSOR_PROXIMA_COLUNA_CB
-    JMP RESTO_IMPRECAO_CB
+  ;  JMP RESTO_IMPRECAO_CB
     RET
 
 CURSOR_PROXIMA_COLUNA_CB:
@@ -535,7 +528,175 @@ PROXIMA_LINHA_CB:
     INT 10H
     POP DI
     POP BX
-    ret
+    ret   
+    
+    
+            ;PROCURA BAIXO_CIMA ------------- 
+
+
+
+PROCURA_BAIXO_CIMA:
+    PUSHF  
+    PUSH DX  
+    PUSH BX
+    PUSH DI
+    MOV CONTADOR, 0
+    MOV LENGHT, 0
+    
+PROCURANDO_BAIXO_CIMA_IR_FINAL_PALAVRA:
+    MOV DL, [SI]
+    CMP DL, 0
+    JE CHEGOU_BC
+    INC SI
+    INC LENGHT  
+    JMP PROCURANDO_BAIXO_CIMA_IR_FINAL_PALAVRA
+
+    
+CHEGOU_BC:
+    DEC SI
+    DEC LENGHT
+    MOV PUSH_SI, SI
+    JMP PROCURANDO_BAIXO_CIMA_IGUAIS
+    
+PROCURANDO_BAIXO_CIMA_IGUAIS:
+    MOV DL, [SI]
+    MOV DH, [DI]
+    
+   ; CMP DL, 0
+   ; JE  ACHOU_SUBSTRING_PROCURA_BAIXO_CIMA 
+    
+    CMP DH, 0                                        
+    JE  NAO_ACHOU_SUBSTRING_PROCURA_BAIXO_CIMA
+    
+    CMP DH,DL
+    JE  IGUAL_PARCIAL_PROCURANDO_BAIXO_CIMA_IGUAIS 
+    
+    CMP DH, DL
+    JNE IMPRIMIR_TRACO_BC
+    
+IMPRIMIR_TRACO_BC:
+    INC CONTADOR 
+    MOV DL, 0
+    MOV AH,2 
+    MOV DL, '-'
+    INT 21H
+    MOV DL, [BX]
+    CMP DL, '*'
+    JE PULA_COLUNA_BC 
+    CALL PROXIMA_LINHA_BC
+     
+    ADD BX, 42
+    MOV DL,[BX]
+    CMP DL, '#'
+    JE FIM_PROCURA_BAIXO_CIMA
+    MOV DL, [SI]
+                             
+    MOV SI, PUSH_SI
+    ADD DI, 42
+    JMP PROCURANDO_BAIXO_CIMA_IGUAIS
+    
+IGUAL_PARCIAL_PROCURANDO_BAIXO_CIMA_IGUAIS: 
+    MOV AH, 2
+    MOV DL, [SI]
+    INT 21H
+    CALL PROXIMA_LINHA_BC
+    DEC SI
+    ADD DI, 42 
+    ADD BX, 42
+    INC CONTADOR
+   ; INC CONTADOR_2_BP ; PRECISEI QUE BP FOSSE 8BIT     
+    
+  ;  MOV DL, [SI]
+   ; MOV DH, [DI]
+   ; CMP DH, DL
+  ;  JNE RETORNA_TRACO_BACKSPACE_PUSH_BC
+             
+    JMP PROCURANDO_BAIXO_CIMA_IGUAIS   
+    
+
+      
+IMPRECAO_BC:
+    
+    MOV AH,2
+    MOV DL,[SI]
+    INT 21H
+    CALL PROXIMA_LINHA_BC
+    INC CONTADOR 
+    ADD BX, 42 
+    INC SI
+    JMP IMPRECAO_BC
+RET
+  
+           
+    
+NAO_ACHOU_SUBSTRING_PROCURA_BAIXO_CIMA:   
+    MOV SI, OFFSET NAO_ACHADO
+    CALL PRINT_STRING
+    
+FIM_PROCURA_BAIXO_CIMA:
+    POP DX
+    POPF
+    RET
+    ;JMP BC      ATUALIZAR MAIS TARDE 
+
+PULA_COLUNA_BC:
+    POP BX
+    INC BX
+    PUSH BX 
+    MOV DI, BX
+  
+    CALL CURSOR_PROXIMA_COLUNA_BC
+    JMP PROCURANDO_BAIXO_CIMA_IGUAIS 
+    RET
+    
+ PULA_COLUNA_FIM_BC:    
+    POP BX
+    INC BX
+    PUSH BX
+    CALL CURSOR_PROXIMA_COLUNA_BC
+    RET
+
+CURSOR_PROXIMA_COLUNA_BC:
+    PUSH BX
+    PUSH DI
+    MOV AH, 03 ; AH=3/INT10H = GET CURSOR POSITION
+    MOV BH, 0
+    INT 10H
+    SUB DH, CONTADOR 
+    INC DH
+    MOV AH, 2  ; AH=2/INT10H SET CURSOR POSITION
+    MOV BH, 0
+    MOV DL, DL
+    MOV DH, DH
+    INT 10H
+    
+    POP DI 
+    POP BX
+    MOV CONTADOR, 0
+    RET        
+    
+PROXIMA_LINHA_BC:
+    PUSH BX
+    PUSH DI
+    MOV AH, 03
+    MOV BH, 0
+    INT 10H
+    
+    INC DH
+    DEC DL
+    MOV AH, 2
+    MOV BH, 0
+    MOV DL, DL
+    MOV DH, DH
+    INT 10H
+    POP DI
+    POP BX
+    ret    
+    
+    
+    
+    
+    
 PULA_LINHA:                      
     pushf
     push ax
@@ -562,6 +723,8 @@ PUSH_CONTADOR_2_BP DB 0
 CONTADOR DB 0
 COLUNA DB 0
 LINHA DB 0
+
+PUSH_SI DW 0
                                                        
 ;use qualquer marcador                                                          
 ;fixo 10x40
@@ -592,14 +755,10 @@ TRACO    DB   "!----------------------------------------@"
          DB   "!----------------------------------------@"
          DB   "*****************************************#",0  
 NAO_ACHADO DB "NAO ACHADO",0
-RET 
+RET   
 
 
-
-
-
-
- ;RETORNA_TRACO_BACKSPACE_PUSH_CB:
+;RETORNA_TRACO_BACKSPACE_PUSH_CB:
 ;    MOV PUSH_CONTADOR_2_BP, CONTADOR_2_BP
 ;    JMP RETORNA_TRACO_BACKSPACE_CB
 ;    
